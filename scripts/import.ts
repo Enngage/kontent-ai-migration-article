@@ -1,11 +1,9 @@
 import {
-  ExportAdapter,
   MigrationAsset,
   MigrationElementModels,
   MigrationElements,
   MigrationItem,
   elementsBuilder,
-  exportAsync,
   importAsync,
   storeAsync,
 } from "@kontent-ai-consulting/migration-toolkit";
@@ -45,101 +43,77 @@ function translateLanguageCodename(language: string): string {
   throw Error(`Invalid language '${language}'`);
 }
 
-const adapter: ExportAdapter = {
-  name: "customExportAdapter",
-  exportAsync: () => {
-    const fileData = readFileSync("./source-data.json").toString();
-    const migrationItems: MigrationItem[] = [];
+const fileData = readFileSync("./source-data.json").toString();
+const migrationItems: MigrationItem[] = [];
 
-    for (const item of JSON.parse(fileData) as SourceItemModel[]) {
-      const movie: MigrationItem<MovieElements> = {
-        system: {
-          name: item.title,
-          codename: toCodename(item.title),
-          collection: {
-            codename: "default",
-          },
-          language: {
-            codename: translateLanguageCodename(item.language),
-          },
-          type: {
-            codename: "movie",
-          },
-          workflow: {
-            codename: "default",
-          },
-          workflow_step: {
-            codename: "draft",
-          },
-        },
-        elements: {
-          title: elementsBuilder().textElement({ value: item.title }),
-          length: elementsBuilder().numberElement({ value: item.duration }),
-          category: elementsBuilder().multipleChoiceElement({
-            value: item.genre.split(",").map((m) => {
-              return { codename: m.trim() };
-            }),
-          }),
-          poster: elementsBuilder().assetElement({
-            value: [
-              {
-                codename: "warrior_teaser",
-              },
-            ],
-          }),
-          plot: elementsBuilder().richTextElement({
-            value: {
-              value: `<h1>${item.title}</h1><p>${item.text}</p>`,
-              components: [],
-            },
-          }),
-        },
-      };
-
-      migrationItems.push(movie);
-    }
-
-    const migrationAssets: MigrationAsset[] = [
-      {
-        _zipFilename: "warrior_teaser.jpg",
-        codename: "warrior_teaser",
-        filename: "warrior_teaser.jpg",
-        title: "Warrior teaser",
-        binaryData: readFileSync("./warrior_teaser.jpg"),
+for (const item of JSON.parse(fileData) as SourceItemModel[]) {
+  const movie: MigrationItem<MovieElements> = {
+    system: {
+      name: item.title,
+      codename: toCodename(item.title),
+      collection: {
+        codename: "default",
       },
-    ];
+      language: {
+        codename: translateLanguageCodename(item.language),
+      },
+      type: {
+        codename: "movie",
+      },
+      workflow: {
+        codename: "default",
+      },
+      workflow_step: {
+        codename: "draft",
+      },
+    },
+    elements: {
+      title: elementsBuilder().textElement({ value: item.title }),
+      length: elementsBuilder().numberElement({ value: item.duration }),
+      category: elementsBuilder().multipleChoiceElement({
+        value: item.genre.split(",").map((m) => {
+          return { codename: m.trim() };
+        }),
+      }),
+      poster: elementsBuilder().assetElement({
+        value: [
+          {
+            codename: "warrior_teaser",
+          },
+        ],
+      }),
+      plot: elementsBuilder().richTextElement({
+        value: {
+          value: `<h1>${item.title}</h1><p>${item.text}</p>`,
+          components: [],
+        },
+      }),
+    },
+  };
 
-    return {
-      items: migrationItems,
-      assets: migrationAssets,
-    };
+  migrationItems.push(movie);
+}
+
+const migrationAssets: MigrationAsset[] = [
+  {
+    _zipFilename: "warrior_teaser.jpg",
+    codename: "warrior_teaser",
+    filename: "warrior_teaser.jpg",
+    title: "Warrior teaser",
+    binaryData: readFileSync("./warrior_teaser.jpg"),
   },
-};
-
-// get data in proper format
-const exportData = await exportAsync(adapter);
+];
 
 // stores data on FS for later use
 await storeAsync({
-  data: exportData,
-  files: {
-    items: {
-      filename: "items-export.zip",
-      format: "json",
-    },
-    assets: {
-      filename: "assets-export.zip",
-      format: "json",
-    },
-  },
+  data: { assets: migrationAssets, items: migrationItems },
+  filename: `data.zip`,
 });
 
 // and import to Kontent.ai
 await importAsync({
-  data: exportData,
-  adapterConfig: {
-    environmentId: "91990386-ce1d-0129-beb7-9aa24657820f",
-    apiKey: "",
-    skipFailedItems: false,
-  },
+  data: { assets: migrationAssets, items: migrationItems },
+  environmentId: "91990386-ce1d-0129-beb7-9aa24657820f",
+  apiKey: "",
+  skipFailedItems: false,
 });

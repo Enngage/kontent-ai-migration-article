@@ -13,7 +13,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@kontent-ai-consulting/migration-toolkit": "1.0.0-25",
+    "@kontent-ai-consulting/migration-toolkit": "1.0.0-26",
     "typescript": "5.4.5",
     "tsx": "4.15.6",
     "@types/node": "20.14.4"
