@@ -95,11 +95,11 @@ for (const item of JSON.parse(fileData) as SourceItemModel[]) {
   migrationItems.push(movie);
 }
 
-const fileDir = "files";
-const migrationAssets: MigrationAsset[] = readdirSync(fileDir).map(
+const scanDir = "files";
+const migrationAssets: MigrationAsset[] = readdirSync(scanDir).map(
   (filename) => {
     return {
-      binaryData: readFileSync(`${fileDir}\\${filename}`),
+      binaryData: readFileSync(`${scanDir}\\${filename}`),
       codename: parse(filename).name,
       filename: filename,
       title: filename,
