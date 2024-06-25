@@ -7,7 +7,8 @@ import {
   importAsync,
   storeAsync,
 } from "@kontent-ai-consulting/migration-toolkit";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
+import { parse } from "path";
 
 /**
  * Optionally (but strongly recommended) you may define a migration model
@@ -94,15 +95,17 @@ for (const item of JSON.parse(fileData) as SourceItemModel[]) {
   migrationItems.push(movie);
 }
 
-const migrationAssets: MigrationAsset[] = [
-  {
-    _zipFilename: "warrior_teaser.jpg",
-    codename: "warrior_teaser",
-    filename: "warrior_teaser.jpg",
-    title: "Warrior teaser",
-    binaryData: readFileSync("./warrior_teaser.jpg"),
-  },
-];
+const fileDir = "files";
+const migrationAssets: MigrationAsset[] = readdirSync(fileDir).map(
+  (filename) => {
+    return {
+      binaryData: readFileSync(`${fileDir}\\${filename}`),
+      codename: parse(filename).name,
+      filename: filename,
+      title: filename,
+    };
+  }
+);
 
 // stores data on FS for later use
 await storeAsync({
